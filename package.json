@@ -1,0 +1,11 @@
+{
+  "name": "discordVoiceChannelBot",
+  "version": "0.0.1",
+  "dependencies": {
+    "discord.js":"*",
+    "ffmpeg-binaries": "*",
+    "opusscript": "*",
+    "ytdl-core":"*"
+  }
+  
+}
