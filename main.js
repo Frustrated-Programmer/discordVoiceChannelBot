@@ -13,19 +13,33 @@ let warned = false;
 let prefix = `-`;
 let commands = [
 	{
-		name: `help`,
-		cmd : function (msg, args) {
-			msg.channel.send(`This bot is for the SOLE purpose of playing music.\n**COMMANDS:**\n\`\`\`\n${prefix}help                   displays this message\n${prefix}join                   joins the Voice Channel you are in\n${prefix}play [YT_LINK]         plays the audio from the YT_LINK\n${prefix}suggest [Suggestion]   sends a suggestion to my owner.\`\`\``);
+		name       : `help`,
+		args       : [],
+		description: `Displays a message with commands and descriptions.`,
+		cmd        : function (msg, args) {
+			let commandsText = ``;
+			for (let i = 0; i < commands.length; i++) {
+				let cmd = `${prefix}${commands[i].name}`;
+				let spacing = ``;
+				while (spacing.length + cmd.length < 20) {
+					spacing += ` `;
+				}
+				commandsText += `${cmd}${spacing}${commands[i].description}`;
+			}
+			msg.channel.send(`This bot is for the SOLE purpose of playing music.\n**COMMANDS:**\n\`\`\`\n${commandsText}\`\`\``);
 		}
 	},
 	{
-		name: `join`,
-		cmd : function (msg, args) {
+		name       : `join`,
+		args       : [],
+		description: `join the Voice Channel you are currently in.`,
+		cmd        : function (msg, args) {
 			if (msg.member.voiceChannel) {
 				msg.member.voiceChannel.join()
 					.then(connect => {
 						connections[msg.guild.id] = connect;
-						msg.reply(`I have successfully connected to the channel!`);
+						msg.reply(
+							`I have successfully connected to the channel!`);
 					});
 			}
 			else {
@@ -34,9 +48,10 @@ let commands = [
 		}
 	},
 	{
-		name: `play`,
-		cmd : function (msg, args) {
-
+		name       : `play`,
+		args       : [`YouTube_Link`],
+		description: `plays the audio from the YouTube video listed.`,
+		cmd        : function (msg, args) {
 			if (connections[msg.guild.id]) {
 				if (args[0]) {
 					let link = msg.content.split(` `)[1];
@@ -75,41 +90,16 @@ let commands = [
 		}
 	},
 	{
-		name: `suggest`,
-		cmd : function (msg, args) {
+		name       : `suggest`,
+		args       : [`suggestion`],
+		description: `suggestions a command to me.`,
+		cmd        : function (msg, args) {
 			if (args.length) {
 				msg.channel.send(`Your suggestion has been sent.\n*don't abuse this command*`);
 				client.users.get(ownerID).send(`${msg.author.username} has suggested:\n- - - - - - - - -\n${args.join(` `)}`);
 			}
 			else {
 				msg.channel.send(`You need to include a suggestion to send to my owner.`)
-			}
-		}
-	},
-	{
-		name: `exit`,
-		cmd : function (msg, args) {
-			if (msg.author.id === ownerID) {
-				if (warned) {
-					for (let i = 0; i < connections.length; i++) {
-						let members = connections[i].channel.members.array();
-						for(let i =0;i<members.length;i++){
-							client.users.get(members[i].id).send(`I'm sorry for me abruptly stop playing in the Voice Channel you were listening to.\nI had to re-boot. Please continue`);
-						}
-						connections[i].channel.leave();
-					}
-					setTimeout(function () {
-						process.exit();
-					},5000);
-				}
-				else {
-					msg.author.send(`Are you sure you wish to exit?\nThere are \`${connections.length}\` connections currently.\nRe-run the command in less than \`10\` seconds to actually exit.`);
-					warned = true;
-					setTimeout(function () {
-						warned = false;
-					},10000);
-
-				}
 			}
 		}
 	}
@@ -120,6 +110,28 @@ client.on(`message`, function (message) {
 		return;
 	}
 	if (message.author.id === client.user.id)return;
+	if (message.author.id === ownerID && message.content.toLowerCase() === `${prefix}exit`) {
+		if (warned) {
+			for (let i = 0; i < connections.length; i++) {
+				let members = connections[i].channel.members.array();
+				for (let i = 0; i < members.length; i++) {
+					client.users.get(members[i].id).send(`I'm sorry for me abruptly stop playing in the Voice Channel you were listening to.\nI had to re-boot. Please continue`);
+				}
+				connections[i].channel.leave();
+			}
+			setTimeout(function () {
+				process.exit();
+			}, 5000);
+		}
+		else {
+			message.author.send(`Are you sure you wish to exit?\nThere are \`${connections.length}\` connections currently.\nRe-run the command in less than \`10\` seconds to actually exit.`);
+			warned = true;
+			setTimeout(function () {
+				warned = false;
+			}, 10000);
+
+		}
+	}
 
 	let words = message.content.toLowerCase().split(` `);
 	for (let i = 0; i < commands.length; i++) {
