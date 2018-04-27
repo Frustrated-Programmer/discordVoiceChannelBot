@@ -2,12 +2,14 @@ const fs = require(`fs`);
 const Discord = require(`discord.js`);
 const ytdl = require('ytdl-core');
 
+let ownerID = `244590122811523082`;
 let client = new Discord.Client();
 let connections = {};
 client.on(`ready`, function () {
 	console.log(`ready`);
 	client.user.setActivity(`${prefix}help`)
 });
+let warned = false;
 let prefix = `-`;
 let commands = [
 	{
@@ -46,7 +48,10 @@ let commands = [
 									const stream = ytdl(link);
 									const dispatcher = connections[msg.guild.id].playStream(stream);
 									m.edit(`<@${msg.author.id}>, playing ${info.title}`);
-									dispatcher.on('end', () => connections[msg.guild.id].channel.leave())
+									dispatcher.on('end', function () {
+										connections[msg.guild.id].channel.leave()
+										delete connections[msg.guild.id];
+									});
 								}
 							});
 						});
@@ -58,7 +63,10 @@ let commands = [
 				else {
 					const dispatcher = connections[msg.guild.id].playFile('C:/Users/Elijah/Music/SampleAudio.mp3');
 					msg.reply(`You didnt supply anything to play.\nPlaying \`SampleAudio.mp3\``);
-					dispatcher.on('end', () => connections[msg.guild.id].channel.leave());
+					dispatcher.on('end', function () {
+						connections[msg.guild.id].channel.leave()
+						delete connections[msg.guild.id];
+					});
 				}
 			}
 			else {
@@ -67,14 +75,41 @@ let commands = [
 		}
 	},
 	{
-		name:`suggest`,
-		cmd:function (msg,args) {
-			if(args.length){
+		name: `suggest`,
+		cmd : function (msg, args) {
+			if (args.length) {
 				msg.channel.send(`Your suggestion has been sent.\n*don't abuse this command*`);
-				client.users.get(244590122811523082).send(`${msg.author.username} has suggested:\n- - - - - - - - -\n${args.join(` `)}`);
+				client.users.get(ownerID).send(`${msg.author.username} has suggested:\n- - - - - - - - -\n${args.join(` `)}`);
 			}
-			else{
+			else {
 				msg.channel.send(`You need to include a suggestion to send to my owner.`)
+			}
+		}
+	},
+	{
+		name: `exit`,
+		cmd : function (msg, args) {
+			if (msg.author.id === ownerID) {
+				if (warned) {
+					for (let i = 0; i < connections.length; i++) {
+						let members = connections[i].channel.members.array();
+						for(let i =0;i<members.length;i++){
+							client.users.get(members[i].id).send(`I'm sorry for me abruptly stop playing in the Voice Channel you were listening to.\nI had to re-boot. Please continue`);
+						}
+						connections[i].channel.leave();
+					}
+					setTimeout(function () {
+						process.exit();
+					},5000);
+				}
+				else {
+					msg.author.send(`Are you sure you wish to exit?\nThere are \`${connections.length}\` connections currently.\nRe-run the command in less than \`10\` seconds to actually exit.`);
+					warned = true;
+					setTimeout(function () {
+						warned = false;
+					},10000);
+
+				}
 			}
 		}
 	}
