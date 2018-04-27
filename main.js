@@ -37,7 +37,11 @@ let commands = [
 			if (msg.member.voiceChannel) {
 				msg.member.voiceChannel.join()
 					.then(connect => {
-						connections[msg.guild.id] = connect;
+						connections[msg.guild.id] = {
+							connection:connect,
+							channel:msg.channel.id,
+							queue:[],
+						};
 						msg.reply(
 							`I have successfully connected to the channel!`);
 					});
@@ -55,16 +59,18 @@ let commands = [
 			if (connections[msg.guild.id]) {
 				if (args[0]) {
 					let link = msg.content.split(` `)[1];
+					link = link.split(`youtube.com/watch?v=`)[1];
+					link = `youtube.com/watch?v=${link}`;
 					if (ytdl.validateURL(link)) {
 						msg.channel.send(`<@${msg.author.id}>, Loading Youtube Video`).then(function (m) {
 							ytdl.getInfo(ytdl.getVideoID(link), function (err, info) {
 								if (err) console.log(err);
 								else {
-									const stream = ytdl(link);
-									const dispatcher = connections[msg.guild.id].playStream(stream);
+									const stream = ytdl(link,{filter:`audio`});
+									const dispatcher = connections[msg.guild.id].connection.playStream(stream);
 									m.edit(`<@${msg.author.id}>, playing ${info.title}`);
 									dispatcher.on('end', function () {
-										connections[msg.guild.id].channel.leave()
+										connections[msg.guild.id].channel.leave();
 										delete connections[msg.guild.id];
 									});
 								}
@@ -76,10 +82,10 @@ let commands = [
 					}
 				}
 				else {
-					const dispatcher = connections[msg.guild.id].playFile('C:/Users/Elijah/Music/SampleAudio.mp3');
+					const dispatcher = connections[msg.guild.id].connection.playFile('C:/Users/Elijah/Music/SampleAudio.mp3');
 					msg.reply(`You didnt supply anything to play.\nPlaying \`SampleAudio.mp3\``);
 					dispatcher.on('end', function () {
-						connections[msg.guild.id].channel.leave()
+						connections[msg.guild.id].channel.leave();
 						delete connections[msg.guild.id];
 					});
 				}
@@ -113,11 +119,17 @@ client.on(`message`, function (message) {
 	if (message.author.id === ownerID && message.content.toLowerCase() === `${prefix}exit`) {
 		if (warned) {
 			for (let i = 0; i < connections.length; i++) {
-				let members = connections[i].channel.members.array();
-				for (let i = 0; i < members.length; i++) {
-					client.users.get(members[i].id).send(`I'm sorry for me abruptly stop playing in the Voice Channel you were listening to.\nI had to re-boot. Please continue`);
+				let chan = client.channels.get(connections[i].channel);
+				if(chan){
+					chan.send(`I'm sorry for me abruptly stop playing in the Voice Channel\nI had to re-boot. Please continue`);
 				}
-				connections[i].channel.leave();
+				else {
+					let members = connections[i].channel.members.array();
+					for (let i = 0; i < members.length; i++) {
+						client.users.get(members[i].id).send(`I'm sorry for me abruptly stop playing in the Voice Channel you were listening to.\nI had to re-boot. Please continue`);
+					}
+				}
+				connections[i].connection.channel.leave();
 			}
 			setTimeout(function () {
 				process.exit();

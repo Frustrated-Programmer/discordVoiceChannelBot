@@ -13,3 +13,10 @@ As I would love making more features for this bot, Don't hesitate to use the `-s
 | join| join| You need to be in a voice channel | Joins the voice channel that you are in
 | play| play https://www.youtube.com/watch?v=NZR4WEjpOQg| Bot needs to have joined your voice channel | Plays the audio from the YT_link supplied
 | suggest | suggest make more commands | nothing | sends the suggestion to the owner ~~(AKA me)~~
+
+
+## Todo
+- [ ] Make it so you can search for a YT video
+- [ ] Music playlist with playlist commands. (Shuffle | Skip | Remove | Add | Clear )
+- [ ] Music Commands (Volume Control| Play | Pause)
+- [ ] Make bot auto leave voice channel.
