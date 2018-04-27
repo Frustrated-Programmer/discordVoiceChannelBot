@@ -13,7 +13,7 @@ let commands = [
 	{
 		name: `help`,
 		cmd : function (msg, args) {
-			msg.channel.send(`This bot is for the SOLE purpose of playing music.\n**COMMANDS:**\n\`\`\`\n${prefix}help            displays this message\n${prefix}join            joins the Voice Channel you are in\n${prefix}play [YT_LINK]  plays the YT_LINK\`\`\``);
+			msg.channel.send(`This bot is for the SOLE purpose of playing music.\n**COMMANDS:**\n\`\`\`\n${prefix}help                   displays this message\n${prefix}join                   joins the Voice Channel you are in\n${prefix}play [YT_LINK]         plays the audio from the YT_LINK\n${prefix}suggest [Suggestion]   sends a suggestion to my owner.\`\`\``);
 		}
 	},
 	{
@@ -63,6 +63,18 @@ let commands = [
 			}
 			else {
 				msg.reply(`I am not in a voice channel.\nJoin a Voice Channel and then use \`${prefix}join\`.`);
+			}
+		}
+	},
+	{
+		name:`suggest`,
+		cmd:function (msg,args) {
+			if(args.length){
+				msg.channel.send(`Your suggestion has been sent.\n*don't abuse this command*`);
+				client.users.get(244590122811523082).send(`${msg.author.username} has suggested:\n- - - - - - - - -\n${args.join(` `)}`);
+			}
+			else{
+				msg.channel.send(`You need to include a suggestion to send to my owner.`)
 			}
 		}
 	}
